@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Our Verse</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Patrick+Hand&display=swap');
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to bottom, #ffd1dc, #ffafcc);
+      color: #ff66b2;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    header {
+      font-size: 3em;
+      font-family: 'Patrick Hand', cursive;
+      text-shadow: 5px 5px 15px #ff3399;
+      margin-bottom: 20px;
+      background: #fff0f5;
+      padding: 15px 30px;
+      border-radius: 25px;
+      box-shadow: 0 0 20px #ff66b2;
+    }
+
+    .container {
+      background: #fff;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 15px #ff66b2;
+      text-align: center;
+    }
+
+    .input-field {
+      width: 90%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 2px solid #ff66b2;
+      background: #ffebf0;
+      color: #ff66b2;
+      margin-bottom: 10px;
+    }
+
+    .button {
+      background: #ff66b2;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    .button:hover {
+      background: #ff3385;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .chat-messages {
+      height: 150px;
+      overflow-y: auto;
+      background: #fff0f5;
+      border-radius: 10px;
+      padding: 10px;
+      text-align: left;
+      margin-bottom: 10px;
+    }
+
+    .chat-message {
+      margin-bottom: 10px;
+    }
+
+    .post {
+      background: #ffebf0;
+      padding: 10px;
+      border-radius: 10px;
+      margin: 10px 0;
+      box-shadow: 0 0 10px #ff66b2;
+      text-align: center;
+    }
+
+    .post img {
+      max-width: 100%;
+      max-height: 300px;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <header>✨ Our Verse ✨</header>
+
+  <div class="container" id="loginContainer">
+    <h3>Anmeldung 🐰</h3>
+    <input type="text" id="loginUsername" class="input-field" placeholder="Benutzername">
+    <input type="password" id="loginPassword" class="input-field" placeholder="Passwort">
+    <button class="button" onclick="login()">Anmelden 💖</button>
+  </div>
+
+  <div class="container hidden" id="mainContent">
+    <h3>Willkommen im Our Verse! 🎀</h3>
+    <button class="button" onclick="logout()">Abmelden 🚪</button>
+    
+    <div class="chat-room">
+      <h3>Chat </h3>
+      <div class="chat-messages" id="chatMessages"></div>
+      <input type="text" class="input-field" id="chatInput" placeholder="Nachricht eingeben...">
+      <button class="button" onclick="sendMessage()">Senden 💌</button>
+    </div>
+    
+    <div class="post-section">
+      <h3>Post erstellen 📝</h3>
+      <textarea id="postContent" class="input-field" placeholder="Schreibe hier..."></textarea>
+      <input type="file" id="imageUpload" accept="image/*">
+      <button class="button" onclick="createPost()">Posten 🌸</button>
+    </div>
+    <div id="postFeed"></div>
+  </div>
+
+  <script>
+    const allowedUsers = [
+      { username: "Lukas", password: "31415" },
+      { username: "Flori", password: "noahoreo" }
+    ]; // Benutzer und Passwörter
+
+    function login() {
+      const username = document.getElementById('loginUsername').value;
+      const password = document.getElementById('loginPassword').value;
+
+      // Überprüfen, ob der Benutzername und das Passwort übereinstimmen
+      const user = allowedUsers.find(user => user.username === username && user.password === password);
+
+      if (!user) {
+        alert("Ungültiger Benutzername oder Passwort.");
+        return;
+      }
+
+      document.getElementById('loginContainer').classList.add('hidden');
+      document.getElementById('mainContent').classList.remove('hidden');
+      
+      // Speichere den Benutzernamen im localStorage
+      localStorage.setItem('username', username);
+      
+      // Lade Chat-Nachrichten aus dem localStorage
+      loadMessages();
+    }
+
+    function logout() {
+      document.getElementById('mainContent').classList.add('hidden');
+      document.getElementById('loginContainer').classList.remove('hidden');
+      
+      // Entferne den Benutzernamen aus dem localStorage
+      localStorage.removeItem('username');
+      
+      // Lösche die Chat-Nachrichten aus dem localStorage
+      localStorage.removeItem('chatMessages');
+    }
+
+    function sendMessage() {
+      const messageInput = document.getElementById('chatInput');
+      const message = messageInput.value;
+      if (!message) return;
+
+      // Holen des Benutzernamens aus localStorage
+      const username = localStorage.getItem('username');
+      
+      // Erstellen der Nachricht
+      const chatMessage = {
+        username: username,
+        message: message,
+        timestamp: new Date().toLocaleTimeString(),
+      };
+      
+      // Laden der Nachrichten aus localStorage oder ein leeres Array, wenn keine vorhanden sind
+      let chatMessages = JSON.parse(localStorage.getItem('chatMessages')) || [];
+      chatMessages.push(chatMessage);
+      
+      // Speichern der neuen Liste von Nachrichten
+      localStorage.setItem('chatMessages', JSON.stringify(chatMessages));
+      
+      // Lade die Nachrichten neu
+      loadMessages();
+      
+      // Leeren des Eingabefeldes
+      messageInput.value = '';
+    }
+
+    function loadMessages() {
+      const chatMessages = JSON.parse(localStorage.getItem('chatMessages')) || [];
+      const chatMessagesContainer = document.getElementById('chatMessages');
+      chatMessagesContainer.innerHTML = '';
+      
+      // Zeige jede Nachricht im Chat an
+      chatMessages.forEach(chatMessage => {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('chat-message');
+        messageElement.innerHTML = `<strong>${chatMessage.username}</strong> <span>${chatMessage.timestamp}</span>: <p>${chatMessage.message}</p>`;
+        chatMessagesContainer.appendChild(messageElement);
+      });
+      
+      // Scrolle zum unteren Ende der Nachrichten
+      chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+    }
+
+    function createPost() {
+      const content = document.getElementById('postContent').value;
+      const imageFile = document.getElementById('imageUpload').files[0];
+      if (!content && !imageFile) return;
+      
+      const postFeed = document.getElementById('postFeed');
+      const postElement = document.createElement('div');
+      postElement.classList.add('post');
+      
+      postElement.innerHTML = `<p>${content}</p><button onclick="likePost(this)">❤️ 0</button>`;
+      
+      if (imageFile) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          postElement.innerHTML += `<img src="${event.target.result}" alt="User Post">`;
+        };
+        reader.readAsDataURL(imageFile);
+      }
+      
+      postFeed.prepend(postElement);
+      document.getElementById('postContent').value = '';
+      document.getElementById('imageUpload').value = '';
+    }
+
+    function likePost(button) {
+      let count = parseInt(button.innerText.split(' ')[1]);
+      count++;
+      button.innerText = `❤️ ${count}`;
+    }
+  </script>
+</body>
+</html>
